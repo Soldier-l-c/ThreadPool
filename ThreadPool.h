@@ -1,4 +1,7 @@
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
 #pragma once
+
 #include <iostream>
 #include <thread>
 #include <future>
@@ -7,6 +10,7 @@
 #include <mutex>
 #include <queue>
 #define MAX_THREAD_COUNT 20
+
 class ThreadPool
 {
 public:
@@ -15,6 +19,7 @@ public:
 		static ThreadPool pool;
 		return pool;
 	}
+
 	~ThreadPool()
 	{
 		m_bRun = false;
@@ -29,12 +34,16 @@ public:
 	auto CommitTask(F&& f, Args&&... args) -> std::future<decltype(f(args...))>
 	{
 		using RetType = decltype(f(args...));
-		auto task = std::make_shared<std::packaged_task<RetType()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+		auto task = std::make_shared<std::packaged_task<RetType()>>(
+			std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+			);
 		m_queTaskList.emplace([task]() {(*task)(); });
+
 		CreateThread(1);
 		m_cvTask.notify_one();
 
 		auto future = task->get_future();
+
 		return future;
 	}
 
@@ -51,18 +60,23 @@ private:
 		{
 			m_vecPool.emplace_back([this] 
 				{
-					std::function<void()> task;
+					while (m_bRun)
 					{
-						std::unique_lock<std::mutex>lock(m_mTaskRun);
-						m_cvTask.wait(lock, [this] {return !m_bRun || !m_queTaskList.empty(); });
-						if (!m_bRun)
+						std::function<void()> task;
 						{
-							return;
+							std::unique_lock<std::mutex>lock(m_mTaskRun);
+							m_cvTask.wait(lock, [this] {return !m_bRun || !m_queTaskList.empty(); });
+
+							if (!m_bRun)
+							{
+								return;
+							}
+
+							task = std::move(m_queTaskList.front());
+							m_queTaskList.pop();
 						}
-						task = std::move(m_queTaskList.front());
-						m_queTaskList.pop();
+						task();
 					}
-					task();
 				});
 		}
 	};
@@ -76,5 +90,6 @@ private:
 
 	std::mutex m_mTaskRun;
 	std::condition_variable m_cvTask;
-
 };
+
+#endif//THREAD_POOL_H
