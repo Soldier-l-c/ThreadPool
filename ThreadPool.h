@@ -56,28 +56,30 @@ private:
 	ThreadPool() {};
 	void CreateThread(int32_t threadNum)
 	{
+		static const auto threadFun = [this]
+		{
+			while (m_bRun)
+			{
+				std::function<void()> task;
+				{
+					std::unique_lock<std::mutex>lock(m_mTaskRun);
+					m_cvTask.wait(lock, [this] {return !m_bRun || !m_queTaskList.empty(); });
+
+					if (!m_bRun)
+					{
+						return;
+					}
+
+					task = std::move(m_queTaskList.front());
+					m_queTaskList.pop();
+				}
+				task();
+			}
+		};
+
 		while (threadNum-- > 0 && (MAX_THREAD_COUNT > PoolNum()))
 		{
-			m_vecPool.emplace_back([this] 
-				{
-					while (m_bRun)
-					{
-						std::function<void()> task;
-						{
-							std::unique_lock<std::mutex>lock(m_mTaskRun);
-							m_cvTask.wait(lock, [this] {return !m_bRun || !m_queTaskList.empty(); });
-
-							if (!m_bRun)
-							{
-								return;
-							}
-
-							task = std::move(m_queTaskList.front());
-							m_queTaskList.pop();
-						}
-						task();
-					}
-				});
+			m_vecPool.emplace_back(threadFun);
 		}
 	};
 
