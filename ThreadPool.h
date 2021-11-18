@@ -9,7 +9,9 @@
 #include <thread>
 #include <mutex>
 #include <queue>
-#define MAX_THREAD_COUNT 20
+#define MAX_THREAD_COUNT 10
+
+#define WAIT_ALL_THREAD_EXIT
 
 class ThreadPool
 {
@@ -26,7 +28,11 @@ public:
 		m_cvTask.notify_all();
 		for (auto& iter : m_vecPool)
 		{
+#ifdef WAIT_ALL_THREAD_EXIT
+			iter.join();
+#else
 			iter.detach();
+#endif // WAIT_ALL_THREAD_EXIT
 		}
 	}
 

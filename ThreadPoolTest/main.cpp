@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <future>
 #include <vector>
 #include <thread>
@@ -9,7 +9,7 @@ class TimeConsum
 {
 public:
 	TimeConsum() { m_nTimeStart = time(nullptr); };
-	operator int64_t && ()
+	operator int64_t&& ()
 	{
 		return time(nullptr) - m_nTimeStart;
 	}
@@ -20,7 +20,8 @@ private:
 
 void Test()
 {
-	using std::chrono::operator""s;
+	using std::chrono::operator"" s;
+
 	std::vector<std::future<int>> vecRes;
 	TimeConsum timec;
 
