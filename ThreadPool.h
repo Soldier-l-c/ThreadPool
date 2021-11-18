@@ -47,7 +47,7 @@ public:
 		return future;
 	}
 
-	int32_t PoolNum() 
+	int32_t PoolNum() const
 	{
 		return m_vecPool.size();
 	}

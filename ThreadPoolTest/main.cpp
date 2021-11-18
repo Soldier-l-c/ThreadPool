@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <future>
 #include <vector>
 #include <thread>
@@ -18,7 +18,7 @@ private:
 	int64_t m_nTimeStart{ 0 };
 };
 
-int main()
+void Test()
 {
 	using std::chrono::operator""s;
 	std::vector<std::future<int>> vecRes;
@@ -36,16 +36,22 @@ int main()
 		vecRes.emplace_back(
 			std::move(ThreadPool::instance().CommitTask(
 				std::bind(function, (rand() % 100), (rand() % 101), i)
-			)
-			));
+			)));
 	}
 
 	std::this_thread::sleep_for(10s);
 	for (size_t i = 0; i < vecRes.size(); ++i)
 	{
 		std::cout << "Res of :[" << i << "]" << std::endl;
-		std::cout << vecRes[i].get() << std::endl;//×èÈûµ÷ÓÃ
+		std::cout << vecRes[i].get() << std::endl;//é˜»å¡žè°ƒç”¨
 	}
 
 	std::cout << "Const time:[" << timec << "]" << std::endl;
+}
+
+int main()
+{
+	Test();
+
+	return 0;
 }
