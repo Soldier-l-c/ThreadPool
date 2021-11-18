@@ -34,7 +34,7 @@ void Test()
 
 	for (int i = 0; i < 100; ++i)
 	{
-		vecRes.emplace_back(
+		vecRes.push_back(
 			std::move(ThreadPool::instance().CommitTask(
 				std::bind(function, (rand() % 100), (rand() % 101), i)
 			)));
