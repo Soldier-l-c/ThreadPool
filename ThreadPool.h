@@ -45,7 +45,11 @@ public:
 		auto task = std::make_shared<std::packaged_task<RetType()>>(
 			std::bind(std::forward<F>(f), std::forward<Args>(args)...)
 			);
-		m_queTaskList.emplace([task]() {(*task)(); });
+
+		{
+			std::unique_lock<std::mutex> lock(m_mTaskRun);
+			m_queTaskList.emplace([task]() {(*task)(); });
+		}
 
 #ifdef THREAD_POOL_AUTO_INCREMENT
 		if (m_nIdleThreadNum < 1)
