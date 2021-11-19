@@ -9,9 +9,11 @@
 #include <thread>
 #include <mutex>
 #include <queue>
-#define MAX_THREAD_COUNT 10
+#define MAX_THREAD_COUNT 100
+#define DEFAULT_THREAD_COUNT std::thread::hardware_concurrency()
 
 #define WAIT_ALL_THREAD_EXIT
+#define THREAD_POOL_AUTO_INCREMENT
 
 class ThreadPool
 {
@@ -45,7 +47,12 @@ public:
 			);
 		m_queTaskList.emplace([task]() {(*task)(); });
 
-		CreateThread(1);
+#ifdef THREAD_POOL_AUTO_INCREMENT
+		if (m_nIdleThreadNum < 1)
+		{
+			CreateThread(1);
+		}
+#endif //THREAD_POOL_AUTO_INCREMENT
 		m_cvTask.notify_one();
 
 		auto future = task->get_future();
@@ -58,8 +65,13 @@ public:
 		return m_vecPool.size();
 	}
 
+	int32_t IdleThreadCount() const 
+	{
+		return m_nIdleThreadNum;
+	}
+
 private:
-	ThreadPool() {};
+	ThreadPool(int32_t num = DEFAULT_THREAD_COUNT) { CreateThread(num); };
 	void CreateThread(int32_t threadNum)
 	{
 		static const auto threadFun = [this]
@@ -79,13 +91,20 @@ private:
 					task = std::move(m_queTaskList.front());
 					m_queTaskList.pop();
 				}
+
+				m_nIdleThreadNum--;//执行任务时空闲线程数减一
 				task();
+				m_nIdleThreadNum++;
 			}
 		};
 
 		while (threadNum-- > 0 && (MAX_THREAD_COUNT > PoolNum()))
 		{
 			m_vecPool.emplace_back(threadFun);
+
+			//每创建一个线程，空闲线程数加一，
+			//保证所有任务执行完 空闲线程数==线程池内线程数
+			m_nIdleThreadNum++;
 		}
 	};
 
@@ -95,6 +114,7 @@ private:
 
 	std::atomic_bool m_bRun{ true };
 	std::atomic_int32_t m_nThreadNum{0};
+	std::atomic_int32_t m_nIdleThreadNum{ 0 };
 
 	std::mutex m_mTaskRun;
 	std::condition_variable m_cvTask;
