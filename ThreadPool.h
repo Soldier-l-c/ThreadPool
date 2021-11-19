@@ -28,13 +28,17 @@ public:
 	{
 		m_bRun = false;
 		m_cvTask.notify_all();
-		for (auto& iter : m_vecPool)
+
 		{
+			std::lock_guard<std::mutex>lock(m_mPool);
+			for (auto& iter : m_vecPool)
+			{
 #ifdef WAIT_ALL_THREAD_EXIT
-			iter.join();
+				iter.join();
 #else
-			iter.detach();
+				iter.detach();
 #endif // WAIT_ALL_THREAD_EXIT
+			}
 		}
 	}
 
@@ -66,7 +70,7 @@ public:
 
 	int32_t PoolNum() const
 	{
-		return m_vecPool.size();
+		return m_nThreadNum;
 	}
 
 	int32_t IdleThreadCount() const 
@@ -103,12 +107,16 @@ private:
 		};
 
 		while (threadNum-- > 0 && (MAX_THREAD_COUNT > PoolNum()))
-		{
-			m_vecPool.emplace_back(threadFun);
+		{	
+			{
+				std::lock_guard<std::mutex>lock(m_mPool);
+				m_vecPool.emplace_back(threadFun);
+			}
 
 			//每创建一个线程，空闲线程数加一，
 			//保证所有任务执行完 空闲线程数==线程池内线程数
 			m_nIdleThreadNum++;
+			m_nThreadNum++;
 		}
 	};
 
@@ -120,6 +128,7 @@ private:
 	std::atomic_int32_t m_nThreadNum{0};
 	std::atomic_int32_t m_nIdleThreadNum{ 0 };
 
+	std::mutex m_mPool;
 	std::mutex m_mTaskRun;
 	std::condition_variable m_cvTask;
 };
