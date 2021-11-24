@@ -9,7 +9,7 @@
 #include <thread>
 #include <mutex>
 #include <queue>
-#define MAX_THREAD_COUNT 100
+#define MAX_THREAD_COUNT 20
 #define DEFAULT_THREAD_COUNT std::thread::hardware_concurrency()
 
 #define WAIT_ALL_THREAD_EXIT
@@ -79,7 +79,7 @@ public:
 	}
 
 private:
-	ThreadPool(int32_t num = DEFAULT_THREAD_COUNT) { CreateThread(num); };
+	ThreadPool(int32_t num = std::min((int)DEFAULT_THREAD_COUNT, MAX_THREAD_COUNT)) { CreateThread(num); };
 	void CreateThread(int32_t threadNum)
 	{
 		static const auto threadFun = [this]
