@@ -11,7 +11,7 @@ class TimeConsum
 {
 public:
 	TimeConsum() { m_nTimeStart = time(nullptr); };
-	operator int64_t&& ()
+	operator int64_t&& () const noexcept
 	{
 		return time(nullptr) - m_nTimeStart;
 	}
@@ -20,9 +20,9 @@ private:
 	int64_t m_nTimeStart{ 0 };
 };
 
-struct TestMin
+template <typename Ty>
+struct Min
 {
-	template <typename Ty>
 	constexpr const int operator()(const Ty& n1, const Ty& n2) const noexcept
 	{
 		return n1 < n2;
@@ -67,7 +67,7 @@ void Test_1()
 	{
 		std::this_thread::sleep_for(MILL_SECOND(100));
 		vecRes.push_back(std::move(ThreadPool::instance().CommitTask(
-			std::bind(TestMin(), 1, 2))
+			std::bind(Min<int32_t>(), 1, 2))
 		));
 	}
 
@@ -75,7 +75,7 @@ void Test_1()
 	{
 		std::this_thread::sleep_for(MILL_SECOND(100));
 		vecRes.push_back(std::move(ThreadPool::instance().CommitTask(
-			TestMin(), "test1", "test2"
+			Min<std::string>(), "test1", "test2"
 			)
 		));
 	}
