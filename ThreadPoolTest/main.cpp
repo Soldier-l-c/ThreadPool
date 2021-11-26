@@ -23,7 +23,7 @@ private:
 template <typename Ty>
 struct Min
 {
-	constexpr const int operator()(const Ty& n1, const Ty& n2) const noexcept
+	constexpr const bool operator()(const Ty& n1, const Ty& n2) const noexcept
 	{
 		return n1 < n2;
 	}
@@ -60,7 +60,7 @@ void Test()
 
 void Test_1()
 {
-	std::vector<std::future<int>> vecRes;
+	std::vector<std::future<bool>> vecRes;
 	TimeConsum timec;
 
 	for (int i = 0; i < 10; ++i)
