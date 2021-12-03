@@ -23,7 +23,7 @@ vecRes.push_back(std::move(ThreadPool::instance().CommitTask(
 ));
 
 vecRes.push_back(std::move(ThreadPool::instance().CommitTask(
-	TestMin(), "test1", "test2"
+	TestMin<std::string>(), "test1", "test2"
 	)
 ));
 ```

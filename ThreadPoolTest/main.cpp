@@ -62,7 +62,6 @@ void Test_1()
 {
 	std::vector<std::future<bool>> vecRes;
 	TimeConsum timec;
-
 	for (int i = 0; i < 10; ++i)
 	{
 		std::this_thread::sleep_for(MILL_SECOND(100));
