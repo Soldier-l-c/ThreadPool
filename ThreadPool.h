@@ -9,6 +9,7 @@
 #include <thread>
 #include <mutex>
 #include <queue>
+
 #define MAX_THREAD_COUNT 20
 #define DEFAULT_THREAD_COUNT std::thread::hardware_concurrency()
 
@@ -43,9 +44,9 @@ public:
 	}
 
 	template<typename F, typename... Args>
-	auto CommitTask(F&& f, Args&&... args) -> std::future<decltype(f(args...))>
+	auto CommitTask(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
 	{
-		using RetType = decltype(f(args...));
+		using RetType = std::invoke_result_t<F, Args...>;
 		auto task = std::make_shared<std::packaged_task<RetType()>>(
 			std::bind(std::forward<F>(f), std::forward<Args>(args)...)
 			);
